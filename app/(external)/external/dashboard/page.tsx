@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { submitExternalMark } from '../actions'
+import { submitExternalMark } from '../../actions'
 
 export default async function ExternalDashboard() {
     const supabase = await createClient()
