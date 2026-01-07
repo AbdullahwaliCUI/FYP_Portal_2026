@@ -9,12 +9,44 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
 export function LoginForm() {
     const [showPassword, setShowPassword] = React.useState(false)
+    const [isLoading, setIsLoading] = React.useState(false)
+    const [error, setError] = React.useState<string | null>(null)
 
     // @ts-ignore
     const [state, formAction, isPending] = useActionState(login, { error: null })
+
+    // Client-side login handler as fallback
+    const handleClientLogin = async (formData: FormData) => {
+        setIsLoading(true)
+        setError(null)
+
+        try {
+            const email = formData.get('email') as string
+            const password = formData.get('password') as string
+
+            const supabase = createClient()
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            })
+
+            if (error) {
+                setError(error.message)
+                return
+            }
+
+            // Redirect based on user role
+            window.location.href = '/'
+        } catch (err) {
+            setError('Login failed. Please try again.')
+        } finally {
+            setIsLoading(false)
+        }
+    }
 
     return (
         <Card className="w-[350px]">
@@ -22,7 +54,14 @@ export function LoginForm() {
                 <CardTitle>FYP Portal Login</CardTitle>
                 <CardDescription>Enter your credentials to access the system.</CardDescription>
             </CardHeader>
-            <form action={formAction}>
+            <form action={formAction} onSubmit={(e) => {
+                // Try client-side login if server action fails
+                if (state?.error) {
+                    e.preventDefault()
+                    const formData = new FormData(e.currentTarget)
+                    handleClientLogin(formData)
+                }
+            }}>
                 <CardContent>
                     <div className="grid w-full items-center gap-4">
                         <div className="flex flex-col space-y-1.5">
@@ -58,9 +97,9 @@ export function LoginForm() {
                                 </button>
                             </div>
                         </div>
-                        {state?.error && (
+                        {(state?.error || error) && (
                             <div className="text-sm font-medium text-destructive">
-                                {state.error}
+                                {state?.error || error}
                             </div>
                         )}
                     </div>

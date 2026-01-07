@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { submitEvaluatorMark } from '../../actions'
+import { submitEvaluatorMark } from '@/app/(evaluator)/actions'
 
 export default async function EvaluatorDashboard() {
     const supabase = await createClient()

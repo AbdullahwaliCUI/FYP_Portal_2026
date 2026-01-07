@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { createGroup, submitProjectTitle, submitDocLink } from '../../actions'
+import { EnhancedProjectCard } from '@/components/ui/enhanced-project-card'
+import { createGroup, submitProjectTitle, submitDocLink } from '@/app/(student)/actions'
 
 export default async function StudentDashboard() {
     const supabase = await createClient()
@@ -115,12 +116,36 @@ export default async function StudentDashboard() {
                 </Card>
             ) : (
                 <div className="space-y-6">
-                    <Card className="bg-slate-50 border-blue-200">
-                        <CardHeader>
-                            <CardTitle className="text-blue-900">{project.title}</CardTitle>
-                            <CardDescription>Status: <span className="font-bold uppercase text-blue-700">{project.status}</span></CardDescription>
-                        </CardHeader>
-                    </Card>
+                    {/* Enhanced Project Card with Action Buttons */}
+                    <EnhancedProjectCard
+                        project={{
+                            ...project,
+                            groups: group,
+                            semester: batch.current_semester,
+                            doc_links: links
+                        }}
+                        onEdit={(projectId) => {
+                            // Navigate to edit mode or show edit modal
+                            window.location.href = `/student/project/${projectId}/edit`
+                        }}
+                        onDelete={async (projectId) => {
+                            // Import and call delete action
+                            const { deleteProject } = await import('@/app/actions/project-actions')
+                            const result = await deleteProject(projectId)
+                            if (result.error) {
+                                alert('Error: ' + result.error)
+                            } else {
+                                window.location.reload()
+                            }
+                        }}
+                        onFavorite={async (projectId) => {
+                            // Import and call favorite toggle action
+                            const { toggleFavoriteProject } = await import('@/app/actions/project-actions')
+                            await toggleFavoriteProject(projectId)
+                        }}
+                        isFavorite={false} // TODO: Fetch from user_favorites table
+                        className="bg-slate-50 border-blue-200"
+                    />
 
                     <div className="grid gap-6 md:grid-cols-2">
                         <Card>

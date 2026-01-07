@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { submitMark } from '../../actions'
+import { EnhancedProjectCard } from '@/components/ui/enhanced-project-card'
+import { submitMark } from '@/app/(supervisor)/actions'
 
 export default async function SupervisorDashboard() {
     const supabase = await createClient()
@@ -59,7 +60,32 @@ export default async function SupervisorDashboard() {
 
             <div className="space-y-8">
                 {projects.map((project: any) => (
-                    <ProjectCard key={project.id} project={project} />
+                    <div key={project.id} className="space-y-4">
+                        {/* Enhanced Project Card with Actions */}
+                        <EnhancedProjectCard
+                            project={project}
+                            onEdit={(projectId) => {
+                                window.location.href = `/supervisor/project/${projectId}/edit`
+                            }}
+                            onDelete={async (projectId) => {
+                                const { deleteProject } = await import('@/app/actions/project-actions')
+                                const result = await deleteProject(projectId)
+                                if (result.error) {
+                                    alert('Error: ' + result.error)
+                                } else {
+                                    window.location.reload()
+                                }
+                            }}
+                            onFavorite={async (projectId) => {
+                                const { toggleFavoriteProject } = await import('@/app/actions/project-actions')
+                                await toggleFavoriteProject(projectId)
+                            }}
+                            showActions={true}
+                        />
+                        
+                        {/* Supervisor-specific content below the card */}
+                        <SupervisorProjectDetails project={project} />
+                    </div>
                 ))}
                 {projects.length === 0 && (
                     <p className="text-muted-foreground">No projects assigned yet.</p>
@@ -69,7 +95,7 @@ export default async function SupervisorDashboard() {
     )
 }
 
-function ProjectCard({ project }: { project: any }) {
+function SupervisorProjectDetails({ project }: { project: any }) {
     const semester = project.groups.batches.current_semester
     const members = project.groups.group_members.map((m: any) => m.student.full_name).join(', ')
 
@@ -79,19 +105,10 @@ function ProjectCard({ project }: { project: any }) {
     const getLink = (comp: string) => project.doc_links.find((l: any) => l.component === comp && l.semester === semester)
 
     return (
-        <Card>
+        <Card className="mt-4">
             <CardHeader>
-                <div className="flex justify-between">
-                    <div>
-                        <CardTitle>{project.title}</CardTitle>
-                        <CardDescription>Group: {project.groups.name} | Members: {members}</CardDescription>
-                    </div>
-                    <div className="text-right">
-                        <span className="inline-block px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded">
-                            {semester}th Semester
-                        </span>
-                    </div>
-                </div>
+                <CardTitle className="text-lg">Supervisor Actions</CardTitle>
+                <CardDescription>Deliverables and Grading for {project.title}</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="grid md:grid-cols-2 gap-6">
